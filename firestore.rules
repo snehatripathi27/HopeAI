@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User profile validation
+    function isValidUserProfile(data, uid) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']) &&
+        data.uid == uid &&
+        data.email is string && data.email.size() <= 200 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 120)) &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1000)) &&
+        data.createdAt is string && data.createdAt.size() <= 60;
+    }
+
+    // ChatSession validation
+    function isValidChatSession(data, uid) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'stance', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'title', 'stance', 'modelUsed', 'messagesCount', 'createdAt', 'updatedAt']) &&
+        data.userId == uid &&
+        data.id is string && isValidId(data.id) &&
+        data.title is string && data.title.size() <= 160 &&
+        data.stance in ['listening', 'clarity', 'growth', 'nightwatch'] &&
+        (!('modelUsed' in data) || data.modelUsed in ['gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite']) &&
+        (!('messagesCount' in data) || data.messagesCount is number) &&
+        data.createdAt is string && data.createdAt.size() <= 60;
+    }
+
+    // EmotionalCheckIn validation
+    function isValidEmotionalCheckIn(data, uid) {
+      return data.keys().hasAll(['id', 'userId', 'primaryEmotion', 'valence', 'energy', 'bodyArea', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'primaryEmotion', 'secondaryEmotion', 'valence', 'energy', 'bodyArea', 'note', 'reflection', 'somaticAnchor', 'affirmation', 'createdAt']) &&
+        data.userId == uid &&
+        data.id is string && isValidId(data.id) &&
+        data.primaryEmotion is string && data.primaryEmotion.size() <= 50 &&
+        (!('secondaryEmotion' in data) || (data.secondaryEmotion is string && data.secondaryEmotion.size() <= 50)) &&
+        data.valence is number && data.valence >= 1 && data.valence <= 10 &&
+        data.energy is number && data.energy >= 1 && data.energy <= 10 &&
+        data.bodyArea is string && data.bodyArea.size() <= 80 &&
+        (!('note' in data) || (data.note is string && data.note.size() <= 1000)) &&
+        (!('reflection' in data) || (data.reflection is string && data.reflection.size() <= 2000)) &&
+        (!('somaticAnchor' in data) || (data.somaticAnchor is string && data.somaticAnchor.size() <= 500)) &&
+        (!('affirmation' in data) || (data.affirmation is string && data.affirmation.size() <= 300)) &&
+        data.createdAt is string && data.createdAt.size() <= 60;
+    }
+
+    // DailyIntention validation
+    function isValidDailyIntention(data, uid) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'category', 'completed', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'title', 'category', 'whyItMatters', 'completed', 'completedAt', 'completionReflection', 'isPrimaryToday', 'createdAt']) &&
+        data.userId == uid &&
+        data.id is string && isValidId(data.id) &&
+        data.title is string && data.title.size() <= 200 &&
+        data.category in ['Rest & Boundaries', 'Gentle Connection', 'Mindful Presence', 'Fearless Step'] &&
+        (!('whyItMatters' in data) || (data.whyItMatters is string && data.whyItMatters.size() <= 500)) &&
+        data.completed is bool &&
+        (!('completedAt' in data) || (data.completedAt is string && data.completedAt.size() <= 60)) &&
+        (!('completionReflection' in data) || (data.completionReflection is string && data.completionReflection.size() <= 500)) &&
+        (!('isPrimaryToday' in data) || data.isPrimaryToday is bool) &&
+        data.createdAt is string && data.createdAt.size() <= 60;
+    }
+
+    // Soundtrack validation
+    function isValidSoundtrack(data, uid) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'prompt', 'model', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'title', 'prompt', 'model', 'duration', 'audioDataUrl', 'createdAt']) &&
+        data.userId == uid &&
+        data.id is string && isValidId(data.id) &&
+        data.title is string && data.title.size() <= 120 &&
+        data.prompt is string && data.prompt.size() <= 500 &&
+        data.model in ['lyria-3-clip-preview', 'lyria-3-pro-preview'] &&
+        (!('duration' in data) || (data.duration is string && data.duration.size() <= 60)) &&
+        (!('audioDataUrl' in data) || (data.audioDataUrl is string && data.audioDataUrl.size() <= 1000000)) &&
+        data.createdAt is string && data.createdAt.size() <= 60;
+    }
+
+    // Users collection and subcollections
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming(), userId);
+      allow update: if isOwner(userId) && isValidUserProfile(incoming(), userId) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt;
+      allow delete: if isOwner(userId);
+
+      // Private sanctuary sessions
+      match /sessions/{sessionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(sessionId) && isValidChatSession(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(sessionId) && isValidChatSession(incoming(), userId) && incoming().id == existing().id && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt;
+        allow delete: if isOwner(userId) && isValidId(sessionId);
+      }
+
+      // Emotional check-ins
+      match /checkIns/{checkInId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(checkInId) && isValidEmotionalCheckIn(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(checkInId) && isValidEmotionalCheckIn(incoming(), userId) && incoming().id == existing().id && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt;
+        allow delete: if isOwner(userId) && isValidId(checkInId);
+      }
+
+      // Daily intentions
+      match /intentions/{intentionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(intentionId) && isValidDailyIntention(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(intentionId) && isValidDailyIntention(incoming(), userId) && incoming().id == existing().id && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt;
+        allow delete: if isOwner(userId) && isValidId(intentionId);
+      }
+
+      // Soundtracks
+      match /soundtracks/{soundtrackId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(soundtrackId) && isValidSoundtrack(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(soundtrackId) && isValidSoundtrack(incoming(), userId) && incoming().id == existing().id && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt;
+        allow delete: if isOwner(userId) && isValidId(soundtrackId);
+      }
+    }
+
+    // Test connection endpoint as required by skill
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

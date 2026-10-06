@@ -1,0 +1,6 @@
+{
+  "name": "HopeAI — Emotionally Intelligent Mental Health Companion",
+  "description": "An emotionally intelligent mental health companion designed to support, understand, and empower individuals through empathetic conversation, emotional check-ins, cognitive reframing, and somatic grounding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

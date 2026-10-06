@@ -1,0 +1,260 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public profile and settings for the authenticated user",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "User's unique Firebase Auth UID"
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Profile avatar URL"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "A conversation session within HopeAI Sanctuary",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique session ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the session owner"
+        },
+        "title": {
+          "type": "string",
+          "description": "Conversation topic title",
+          "maxLength": 160
+        },
+        "stance": {
+          "type": "string",
+          "description": "Active emotional stance",
+          "enum": ["listening", "clarity", "growth", "nightwatch"]
+        },
+        "modelUsed": {
+          "type": "string",
+          "description": "Gemini model selected for this session",
+          "enum": ["gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"]
+        },
+        "messagesCount": {
+          "type": "number",
+          "description": "Total messages in this session"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last message"
+        }
+      },
+      "required": ["id", "userId", "title", "stance", "createdAt"]
+    },
+    "EmotionalCheckIn": {
+      "title": "EmotionalCheckIn",
+      "description": "Logged emotional and somatic check-in record",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique check-in ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user"
+        },
+        "primaryEmotion": {
+          "type": "string",
+          "description": "Primary emotion label",
+          "maxLength": 50
+        },
+        "secondaryEmotion": {
+          "type": "string",
+          "description": "Secondary nuance emotion",
+          "maxLength": 50
+        },
+        "valence": {
+          "type": "number",
+          "description": "Pleasantness score between 1 and 10"
+        },
+        "energy": {
+          "type": "number",
+          "description": "Nervous system energy between 1 and 10"
+        },
+        "bodyArea": {
+          "type": "string",
+          "description": "Somatic region where feeling is held",
+          "maxLength": 80
+        },
+        "note": {
+          "type": "string",
+          "description": "Personal note",
+          "maxLength": 1000
+        },
+        "reflection": {
+          "type": "string",
+          "description": "AI reflection",
+          "maxLength": 2000
+        },
+        "somaticAnchor": {
+          "type": "string",
+          "description": "Somatic grounding anchor",
+          "maxLength": 500
+        },
+        "affirmation": {
+          "type": "string",
+          "description": "Daily permission statement",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of check-in"
+        }
+      },
+      "required": ["id", "userId", "primaryEmotion", "valence", "energy", "bodyArea", "createdAt"]
+    },
+    "DailyIntention": {
+      "title": "DailyIntention",
+      "description": "A daily mindful intention to build gentle momentum",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique intention ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user"
+        },
+        "title": {
+          "type": "string",
+          "description": "Intention title",
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of intention",
+          "enum": ["Rest & Boundaries", "Gentle Connection", "Mindful Presence", "Fearless Step"]
+        },
+        "whyItMatters": {
+          "type": "string",
+          "description": "Why this intention supports wellbeing",
+          "maxLength": 500
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the intention is marked completed"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "ISO timestamp of completion"
+        },
+        "completionReflection": {
+          "type": "string",
+          "description": "Reflection note when completed",
+          "maxLength": 500
+        },
+        "isPrimaryToday": {
+          "type": "boolean",
+          "description": "Whether this is the highlighted focus for today"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation"
+        }
+      },
+      "required": ["id", "userId", "title", "category", "completed", "createdAt"]
+    },
+    "Soundtrack": {
+      "title": "Soundtrack",
+      "description": "AI-generated Lyria ambient meditation soundtrack",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique track ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of creator"
+        },
+        "title": {
+          "type": "string",
+          "description": "Name of track",
+          "maxLength": 120
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Prompt used to generate track",
+          "maxLength": 500
+        },
+        "model": {
+          "type": "string",
+          "description": "Lyria model used",
+          "enum": ["lyria-3-clip-preview", "lyria-3-pro-preview"]
+        },
+        "duration": {
+          "type": "string",
+          "description": "Duration label (e.g. 30s or Full Track)"
+        },
+        "audioDataUrl": {
+          "type": "string",
+          "description": "Base64 or blob URL of audio",
+          "maxLength": 1000000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of generation"
+        }
+      },
+      "required": ["id", "userId", "title", "prompt", "model", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document owned strictly by userId"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "ChatSession",
+      "description": "Private Sanctuary dialogue sessions belonging to userId"
+    },
+    "/users/{userId}/checkIns/{checkInId}": {
+      "schema": "EmotionalCheckIn",
+      "description": "Emotional and somatic check-in history belonging to userId"
+    },
+    "/users/{userId}/intentions/{intentionId}": {
+      "schema": "DailyIntention",
+      "description": "Daily momentum intentions belonging to userId"
+    },
+    "/users/{userId}/soundtracks/{soundtrackId}": {
+      "schema": "Soundtrack",
+      "description": "Saved ambient meditation soundscapes belonging to userId"
+    }
+  }
+}
